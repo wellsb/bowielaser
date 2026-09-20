@@ -1,0 +1,33 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8765,
+    "cors_origins": ["*"]
+  },
+  "hardware": {
+    "enabled": true,
+    "simulation": false,
+    "pca9685_address": 64,
+    "channels_total": 16,
+    "pan_channel": 5,
+    "tilt_channel": 6,
+    "pulse_width_range": {
+      "min": 500,
+      "max": 2500
+    },
+    "actuation_range": 162,
+    "min_angle": 0.0,
+    "max_angle": 162.0,
+    "invert_pan": false,
+    "invert_tilt": false
+  },
+  "motion": {
+    "default_step": 2.0,
+    "min_step": 0.5,
+    "max_step": 15.0,
+    "smooth_move": true,
+    "smooth_steps": 10,
+    "smooth_interval_ms": 15
+  },
+  "calibration_file": "calibration.json"
+}

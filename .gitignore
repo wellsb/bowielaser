@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs and runtime PID files
+*.log
+*.pid
+.lgd-*
+
+# Environments
+.env
+.venv/
+venv/
+ENV/
+
+# Operating System & Editors
+.DS_Store
+.vscode/
+.idea/
+*.swp

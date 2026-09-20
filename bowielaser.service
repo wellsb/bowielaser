@@ -1,0 +1,16 @@
+[Unit]
+Description=BowieLaser Pan & Tilt Cat Laser Controller
+After=network.target
+
+[Service]
+Type=simple
+User=x
+WorkingDirectory=/var/www/html/dev/bowielaser
+ExecStart=/usr/bin/python3 /var/www/html/dev/bowielaser/server/laser_server.py
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/www/html/dev/bowielaser/bowielaser.log
+StandardError=append:/var/www/html/dev/bowielaser/bowielaser.log
+
+[Install]
+WantedBy=multi-user.target
