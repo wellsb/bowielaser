@@ -36,16 +36,21 @@ class VisualSquare {
 
   initCanvasSize() {
     const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.width = rect.width;
     this.height = rect.height;
   }
 
   bindEvents() {
     window.addEventListener('resize', () => this.initCanvasSize());
+    if (window.ResizeObserver) {
+      this.resizeObserver = new ResizeObserver(() => this.initCanvasSize());
+      this.resizeObserver.observe(this.canvas);
+    }
 
     const handlePointerDown = (e) => {
       this.isDragging = true;
