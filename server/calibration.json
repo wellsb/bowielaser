@@ -1,37 +1,37 @@
 {
   "limits": {
-    "pan_min": 35.0,
-    "pan_max": 127.0,
-    "tilt_min": 15.0,
-    "tilt_max": 65.0
+    "pan_min": 48.8,
+    "pan_max": 105.8,
+    "tilt_min": 0.0,
+    "tilt_max": 45.6
   },
   "center": {
-    "pan": 81.0,
-    "tilt": 40.0
+    "pan": 82.5,
+    "tilt": 24.7
   },
   "corners": {
     "top_left": {
-      "pan": 127.0,
-      "tilt": 65.0
+      "pan": 100.8,
+      "tilt": 45.6
     },
     "top_right": {
-      "pan": 35.0,
-      "tilt": 65.0
+      "pan": 74.4,
+      "tilt": 44.0
     },
     "bottom_left": {
-      "pan": 127.0,
-      "tilt": 15.0
+      "pan": 105.8,
+      "tilt": 0.0
     },
     "bottom_right": {
-      "pan": 35.0,
-      "tilt": 15.0
+      "pan": 48.8,
+      "tilt": 9.2
     }
   },
   "enforce_limits": true,
   "lock_manual": false,
   "invert_pan": false,
   "invert_tilt": false,
-  "notes": "Floor Play Area calibration: Pan 35°-127°, Tilt 15°-65°.",
+  "notes": "Floor Play Area calibration: Pan 35\u00b0-127\u00b0, Tilt 15\u00b0-65\u00b0.",
   "calibrated": true,
-  "updated_at": "2026-09-20T19:55:00.000000"
+  "updated_at": "2026-09-20T19:57:26.030850"
 }
