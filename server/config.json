@@ -15,9 +15,9 @@
       "min": 500,
       "max": 2500
     },
-    "actuation_range": 162,
+    "actuation_range": 155,
     "min_angle": 0.0,
-    "max_angle": 162.0,
+    "max_angle": 155.0,
     "invert_pan": false,
     "invert_tilt": false
   },

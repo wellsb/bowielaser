@@ -28,7 +28,7 @@ class ServoDriver:
         self.channels_total = hw_conf.get("channels_total", 16)
         self.actuation_range = hw_conf.get("actuation_range", 180)
         self.min_angle = float(hw_conf.get("min_angle", 0.0))
-        self.max_angle = float(hw_conf.get("max_angle", 162.0))
+        self.max_angle = float(hw_conf.get("max_angle", 155.0))
         self.pulse_min = hw_conf.get("pulse_width_range", {}).get("min", 500)
         self.pulse_max = hw_conf.get("pulse_width_range", {}).get("max", 2500)
         self.simulation_requested = hw_conf.get("simulation", False)

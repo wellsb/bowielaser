@@ -8,10 +8,10 @@ A standalone Single Page Application (SPA) and WebSocket server designed to cont
 
 - **Platform:** Raspberry Pi 5 SBC
 - **Servo Board:** Adafruit 16-channel PCA9685 I2C Board (Address: `0x40`)
-- **Pan Servo:** **Channel 5** (Horizontal azimuth control, 0° Right to 162° Left)
-- **Tilt Servo:** **Channel 6** (Vertical elevation control, 0° Down to 162° Up)
+- **Pan Servo:** **Channel 5** (Horizontal azimuth control, 0° Right to 155° Left)
+- **Tilt Servo:** **Channel 6** (Vertical elevation control, 0° Down to 155° Up)
 - **Pulse Width Range:** Configurable in `server/config.json` (Default: `500 - 2500 µs`)
-- **Mechanical Hard Limits:** Strictly clamped in hardware driver to `[0.0°, 162.0°]` to protect gears.
+- **Mechanical Hard Limits:** Strictly clamped in hardware driver to `[0.0°, 155.0°]` to protect gears.
 
 ---
 
@@ -19,7 +19,7 @@ A standalone Single Page Application (SPA) and WebSocket server designed to cont
 
 Physical servos have internal mechanical stops. Driving them beyond these limits binds the motor and strips the internal plastic/metal gears. BowieLaser protects your servos with:
 
-1. **Hardware Driver Clamping:** Hard-clamped to `[0.0°, 162.0°]` at the lowest driver level (`server/hardware.py`).
+1. **Hardware Driver Clamping:** Hard-clamped to `[0.0°, 155.0°]` at the lowest driver level (`server/hardware.py`).
 2. **Floor Play Area Constraint:** Constrains automated patterns inside a calibrated 4-corner floor quadrilateral, preventing the laser from shining behind itself or onto walls and furniture.
 3. **Emergency Stop / Torque Release:** Instantly disables the PWM duty cycle (`PWM=0`) on both channels. When released, the servos relax and do not buzz or strain against stops.
 4. **Smooth S-Curve Interpolation:** Acceleration and deceleration curves avoid jerky step impulses that stress gears.

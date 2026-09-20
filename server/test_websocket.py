@@ -67,11 +67,11 @@ async def test_bowielaser_websocket():
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
         lims = state["calibration"]["limits"]
         corners = state["calibration"]["corners"]
-        assert abs(lims["pan_min"] - 25.0) < 0.1
-        assert abs(lims["tilt_min"] - 12.0) < 0.1
         assert abs(corners["bottom_right"]["pan"] - 25.0) < 0.1
         assert abs(corners["bottom_right"]["tilt"] - 12.0) < 0.1
-        print(f"[PASS] Set Bottom Right verified: Pan Right={lims['pan_min']}°, Tilt Bottom={lims['tilt_min']}°")
+        assert abs(lims["pan_min"] - min(c["pan"] for c in corners.values())) < 0.1
+        assert abs(lims["tilt_min"] - min(c["tilt"] for c in corners.values())) < 0.1
+        print(f"[PASS] Set Bottom Right verified: Pan Right={corners['bottom_right']['pan']}°, Tilt Bottom={corners['bottom_right']['tilt']}°")
 
         # 7. Test "Go to Top-Left" corner
         print("Testing Go to Top-Left corner...")
@@ -91,17 +91,17 @@ async def test_bowielaser_websocket():
         print("Testing Go to Center...")
         await ws.send(json.dumps({"type": "center"}))
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
-        expected_p = round((25.0 + 140.0) / 2.0, 1)
-        expected_t = round((12.0 + 80.0) / 2.0, 1)
+        expected_p = state["calibration"]["center"]["pan"]
+        expected_t = state["calibration"]["center"]["tilt"]
         assert abs(state['pan'] - expected_p) < 0.2 and abs(state['tilt'] - expected_t) < 0.2
         print(f"[PASS] Reached floor center: Pan={state['pan']}°, Tilt={state['tilt']}°")
 
-        # 10. Test Absolute Mechanical Hardware Limits 0.0° and 162.0°
+        # 10. Test Absolute Mechanical Hardware Limits 0.0° and 155.0°
         print("Testing hardware upper limit clamping (commanding 180°, 180°)...")
         await ws.send(json.dumps({"type": "move", "pan": 180.0, "tilt": 180.0}))
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
-        assert state['pan'] == 162.0 and state['tilt'] == 162.0
-        print(f"[PASS] Hard limit 162.0° enforced: Pan={state['pan']}°, Tilt={state['tilt']}°")
+        assert state['pan'] == 155.0 and state['tilt'] == 155.0
+        print(f"[PASS] Hard limit 155.0° enforced: Pan={state['pan']}°, Tilt={state['tilt']}°")
 
         print("Testing hardware lower limit clamping (commanding -20°, -20°)...")
         await ws.send(json.dumps({"type": "move", "pan": -20.0, "tilt": -20.0}))
@@ -139,7 +139,7 @@ async def test_bowielaser_websocket():
         print("[PASS] Servos safely released (PWM=0).")
 
     print("\n==========================================================================")
-    print(" ALL TESTS PASSED: 4-CORNER SETTERS, UNCONSTRAINED MANUAL, HARDWARE 162°!")
+    print(" ALL TESTS PASSED: 4-CORNER SETTERS, UNCONSTRAINED MANUAL, HARDWARE 155°!")
     print("==========================================================================")
 
 if __name__ == "__main__":

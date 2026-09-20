@@ -104,23 +104,23 @@ class LaserApplication:
     def get_clamp_limits(self, manual: bool = False) -> tuple:
         """
         Return limits tuple (pan_min, pan_max, tilt_min, tilt_max).
-        Hardware limits (0.0, 162.0, 0.0, 162.0) are always enforced to protect servo gears.
-        Manual movements (D-pad, sliders, canvas) are unconstrained [0.0, 162.0] unless lock_manual is True,
+        Hardware limits (0.0, 155.0, 0.0, 155.0) are always enforced to protect servo gears.
+        Manual movements (D-pad, sliders, canvas) are unconstrained [0.0, 155.0] unless lock_manual is True,
         enabling the user to freely reach and set corner extremes.
         Automated patterns always strictly respect floor play area limits.
         """
         if manual and not self.calibration.get("lock_manual", False):
-            return (0.0, 162.0, 0.0, 162.0)
+            return (0.0, 155.0, 0.0, 155.0)
 
         if self.calibration.get("enforce_limits", True) and not self.calibration_mode:
             lims = self.calibration.get("limits", {})
             return (
                 lims.get("pan_min", 0.0),
-                lims.get("pan_max", 162.0),
+                lims.get("pan_max", 155.0),
                 lims.get("tilt_min", 0.0),
-                lims.get("tilt_max", 162.0),
+                lims.get("tilt_max", 155.0),
             )
-        return (0.0, 162.0, 0.0, 162.0)
+        return (0.0, 155.0, 0.0, 155.0)
 
     def get_state(self) -> Dict:
         """Full system state representation."""
@@ -293,9 +293,9 @@ class LaserApplication:
         curr_p = self.driver.current_pan if self.driver.current_pan is not None else 81.0
         curr_t = self.driver.current_tilt if self.driver.current_tilt is not None else 40.0
 
-        # Absolute hardware clamping [0.0, 162.0]
-        curr_p = round(max(0.0, min(curr_p, 162.0)), 1)
-        curr_t = round(max(0.0, min(curr_t, 162.0)), 1)
+        # Absolute hardware clamping [0.0, 155.0]
+        curr_p = round(max(0.0, min(curr_p, 155.0)), 1)
+        curr_t = round(max(0.0, min(curr_t, 155.0)), 1)
 
         lims = self.calibration.setdefault("limits", {})
         cntr = self.calibration.setdefault("center", {})
@@ -363,8 +363,8 @@ class LaserApplication:
                     cp = float(cal_data["corners"][ckey].get("pan", corners.get(ckey, {}).get("pan", 81.0)))
                     ct = float(cal_data["corners"][ckey].get("tilt", corners.get(ckey, {}).get("tilt", 40.0)))
                     corners[ckey] = {
-                        "pan": round(max(0.0, min(cp, 162.0)), 1),
-                        "tilt": round(max(0.0, min(ct, 162.0)), 1),
+                        "pan": round(max(0.0, min(cp, 155.0)), 1),
+                        "tilt": round(max(0.0, min(ct, 155.0)), 1),
                     }
             # Update limits envelope from the corners
             all_p = [c["pan"] for c in corners.values()]
@@ -380,11 +380,11 @@ class LaserApplication:
             t_min = float(new_lims.get("tilt_min", lims.get("tilt_min", 15.0)))
             t_max = float(new_lims.get("tilt_max", lims.get("tilt_max", 65.0)))
 
-            # Absolute hardware clamping [0.0, 162.0]
-            p_min = max(0.0, min(p_min, 162.0))
-            p_max = max(0.0, min(p_max, 162.0))
-            t_min = max(0.0, min(t_min, 162.0))
-            t_max = max(0.0, min(t_max, 162.0))
+            # Absolute hardware clamping [0.0, 155.0]
+            p_min = max(0.0, min(p_min, 155.0))
+            p_max = max(0.0, min(p_max, 155.0))
+            t_min = max(0.0, min(t_min, 155.0))
+            t_max = max(0.0, min(t_max, 155.0))
 
             lims["pan_min"] = round(min(p_min, p_max), 1)
             lims["pan_max"] = round(max(p_min, p_max), 1)
@@ -429,9 +429,9 @@ class LaserApplication:
             curr_t = self.driver.current_tilt
             if curr_p is not None and curr_t is not None:
                 p_min = lims.get("pan_min", 0.0)
-                p_max = lims.get("pan_max", 162.0)
+                p_max = lims.get("pan_max", 155.0)
                 t_min = lims.get("tilt_min", 0.0)
-                t_max = lims.get("tilt_max", 162.0)
+                t_max = lims.get("tilt_max", 155.0)
                 clamped_p = max(p_min, min(curr_p, p_max))
                 clamped_t = max(t_min, min(curr_t, t_max))
                 if abs(clamped_p - curr_p) > 0.05 or abs(clamped_t - curr_t) > 0.05:

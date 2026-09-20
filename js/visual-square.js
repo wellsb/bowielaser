@@ -1,6 +1,6 @@
 /**
  * BowieLaser Interactive 2D Visual Floor Play Area & Calibration "Square"
- * Renders the 0-162° physical servo envelope, the active floor play area,
+ * Renders the 0-155° physical servo envelope, the active floor play area,
  * prohibited behind-robot zones, corners, center, and live laser dot.
  * Updates the two red sliders and readouts in real-time when clicked or dragged.
  */
@@ -79,10 +79,10 @@ class VisualSquare {
     const clampedX = Math.max(padding, Math.min(x, this.width - padding));
     const clampedY = Math.max(padding, Math.min(y, this.height - padding));
 
-    // Left on canvas is Pan Left (162°), Right on canvas is Pan Right (0°)
-    let pan = 162.0 - ((clampedX - padding) / drawW) * 162.0;
-    // Top on canvas is Tilt Up / Far (162°), Bottom on canvas is Tilt Down / Near (0°)
-    let tilt = 162.0 - ((clampedY - padding) / drawH) * 162.0;
+    // Left on canvas is Pan Left (155°), Right on canvas is Pan Right (0°)
+    let pan = 155.0 - ((clampedX - padding) / drawW) * 155.0;
+    // Top on canvas is Tilt Up / Far (155°), Bottom on canvas is Tilt Down / Near (0°)
+    let tilt = 155.0 - ((clampedY - padding) / drawH) * 155.0;
 
     // Only clamp manual canvas drag if lock_manual is explicitly enabled
     const lims = this.calMgr.calibration.limits;
@@ -149,19 +149,19 @@ class VisualSquare {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Coordinate mapping functions (Left=162, Right=0; Top=162, Bottom=0)
-    const angleToX = (angle) => padding + ((162.0 - angle) / 162.0) * drawW;
-    const angleToY = (angle) => padding + ((162.0 - angle) / 162.0) * drawH;
+    // Coordinate mapping functions (Left=155, Right=0; Top=155, Bottom=0)
+    const angleToX = (angle) => padding + ((155.0 - angle) / 155.0) * drawW;
+    const angleToY = (angle) => padding + ((155.0 - angle) / 155.0) * drawH;
 
-    // 1. Draw outer physical boundary (0-162)
+    // 1. Draw outer physical boundary (0-155)
     ctx.strokeStyle = '#262d42';
     ctx.lineWidth = 1;
     ctx.strokeRect(padding, padding, drawW, drawH);
 
-    // Subtle grid lines at 40.5°, 81°, 121.5°
+    // Subtle grid lines at 38.75°, 77.5°, 116.25°
     ctx.strokeStyle = 'rgba(46, 54, 80, 0.4)';
     ctx.setLineDash([2, 4]);
-    [40.5, 81, 121.5].forEach(deg => {
+    [38.75, 77.5, 116.25].forEach(deg => {
       const x = angleToX(deg);
       ctx.beginPath();
       ctx.moveTo(x, padding);
@@ -350,14 +350,14 @@ class VisualSquare {
     ctx.fillStyle = '#64708d';
     ctx.font = '9px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('162° (Left)', padding, h - 10);
+    ctx.fillText('155° (Left)', padding, h - 10);
     ctx.fillText('0° (Right)', w - padding, h - 10);
-    ctx.fillText('81° (Forward)', w / 2, h - 10);
+    ctx.fillText('77.5° (Forward)', w / 2, h - 10);
 
     ctx.textAlign = 'right';
     ctx.fillText('0° (Near/Down)', padding - 6, padding + drawH);
-    ctx.fillText('162° (Far/Up)', padding - 6, padding + 4);
-    ctx.fillText('81°', padding - 6, padding + drawH / 2);
+    ctx.fillText('155° (Far/Up)', padding - 6, padding + 4);
+    ctx.fillText('77.5°', padding - 6, padding + drawH / 2);
   }
 }
 
