@@ -6,6 +6,7 @@ __pycache__/
 # Logs and runtime PID files
 *.log
 *.pid
+*.user_backup.json
 .lgd-*
 
 # Environments

@@ -25,6 +25,7 @@ async def test_bowielaser_websocket():
         raw_state = await asyncio.wait_for(ws.recv(), timeout=5.0)
         state = json.loads(raw_state)
         assert state["type"] == "state"
+        initial_calibration = json.loads(json.dumps(state["calibration"]))
         print(f"[PASS] Connected. Initial state: Pan={state['pan']}°, Tilt={state['tilt']}°, Real HW={not state['is_simulation']}")
 
         # 2. Ensure lock_manual is False (default) so manual steering is unconstrained
@@ -121,14 +122,10 @@ async def test_bowielaser_websocket():
         assert state['pan'] == 140.0 and state['tilt'] == 80.0
         print(f"[PASS] With lock_manual=True, manual movement clamped to floor box: Pan={state['pan']}°, Tilt={state['tilt']}°")
 
-        # Reset lock_manual to False
+        # Restore user's real calibration so tests NEVER overwrite user calibration
         await ws.send(json.dumps({
             "type": "set_calibration",
-            "calibration": {
-                "lock_manual": False,
-                "limits": {"pan_min": 35.0, "pan_max": 127.0, "tilt_min": 15.0, "tilt_max": 65.0},
-                "center": {"pan": 81.0, "tilt": 40.0}
-            }
+            "calibration": initial_calibration
         }))
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
 

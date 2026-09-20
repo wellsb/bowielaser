@@ -221,34 +221,6 @@ class VisualSquare {
       ctx.stroke();
     }
     ctx.restore();
-
-    // Out-of-bounds / Behind Robot text labels
-    const minQuadY = Math.min(ptTL.y, ptTR.y);
-    const maxQuadY = Math.max(ptBL.y, ptBR.y);
-    const minQuadX = Math.min(ptTL.x, ptBL.x);
-    const maxQuadX = Math.max(ptTR.x, ptBR.x);
-
-    ctx.fillStyle = 'rgba(255, 70, 90, 0.45)';
-    ctx.font = '9px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Top prohibited (pointing high / ceiling / backwards)
-    if (minQuadY - padding > 18) {
-      ctx.fillText('PROHIBITED / BEHIND ROBOT (HIGH/CEILING)', w / 2, padding + (minQuadY - padding) / 2);
-    }
-    // Left prohibited (pointing backwards left)
-    if (minQuadX - padding > 22) {
-      ctx.fillText('BEHIND LEFT', padding + (minQuadX - padding) / 2, h / 2);
-    }
-    // Right prohibited (pointing backwards right)
-    if (padding + drawW - maxQuadX > 22) {
-      ctx.fillText('BEHIND RIGHT', maxQuadX + (padding + drawW - maxQuadX) / 2, h / 2);
-    }
-    // Bottom prohibited (under base)
-    if (padding + drawH - maxQuadY > 16) {
-      ctx.fillText('BASE / UNDER', w / 2, maxQuadY + (padding + drawH - maxQuadY) / 2);
-    }
     ctx.restore();
 
     // 4. Draw Active Floor Play Area Quadrilateral Polygon
