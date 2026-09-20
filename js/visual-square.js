@@ -72,7 +72,7 @@ class VisualSquare {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const padding = 28;
+    const padding = 22;
     const drawW = this.width - padding * 2;
     const drawH = this.height - padding * 2;
 
@@ -143,7 +143,7 @@ class VisualSquare {
     const ctx = this.ctx;
     const w = this.width;
     const h = this.height;
-    const padding = 28;
+    const padding = 22;
     const drawW = w - padding * 2;
     const drawH = h - padding * 2;
 
@@ -348,16 +348,16 @@ class VisualSquare {
 
     // Axis labels
     ctx.fillStyle = '#64708d';
-    ctx.font = '9px Inter, sans-serif';
+    ctx.font = '8px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('155° (Left)', padding, h - 10);
-    ctx.fillText('0° (Right)', w - padding, h - 10);
-    ctx.fillText('77.5° (Forward)', w / 2, h - 10);
+    ctx.fillText('155° (Left)', padding, h - 6);
+    ctx.fillText('0° (Right)', w - padding, h - 6);
+    ctx.fillText('77.5°', w / 2, h - 6);
 
     ctx.textAlign = 'right';
-    ctx.fillText('0° (Near/Down)', padding - 6, padding + drawH);
-    ctx.fillText('155° (Far/Up)', padding - 6, padding + 4);
-    ctx.fillText('77.5°', padding - 6, padding + drawH / 2);
+    ctx.fillText('0° (Near)', padding - 4, padding + drawH);
+    ctx.fillText('155° (Far)', padding - 4, padding + 4);
+    ctx.fillText('77.5°', padding - 4, padding + drawH / 2);
   }
 }
 
