@@ -133,6 +133,12 @@ class VisualSquare {
   updatePosition(pan, tilt) {
     this.currentPan = pan;
     this.currentTilt = tilt;
+    // When the browser window is not focused or is in the background,
+    // requestAnimationFrame may be throttled or paused by the browser.
+    // Redraw immediately on position update so the canvas stays live.
+    if (document.hidden || !document.hasFocus()) {
+      this.draw();
+    }
   }
 
   startRenderLoop() {

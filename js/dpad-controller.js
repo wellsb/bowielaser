@@ -107,6 +107,11 @@ class DPadController {
         this.setStep(stepMap[key]);
       }
     });
+
+    // Stop repeating directional holds if the window loses focus
+    window.addEventListener('blur', () => {
+      this.stopDirection();
+    });
   }
 
   startDirection(dir, btnElement = null) {

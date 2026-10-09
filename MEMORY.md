@@ -76,6 +76,13 @@ This document maintains essential context, hardware specifications, architectura
   - Dwell Duration: $D \sim \text{Uniform}(\max(0.0, \text{dwell} - \text{dwell\_rand}), \text{dwell} + \text{dwell\_rand})$
   - Servos smoothly interpolate at 50 Hz ($T / 0.02$ steps).
 
+### Decoupled Hardware Timing & Focus Immunity
+- Physical servo loops must **never** block on client WebSocket network I/O.
+- Each connected WebSocket client has an independent writer task fed by a non-blocking queue (`asyncio.Queue(maxsize=1)`).
+- When a client browser window loses focus, Chromium/browser task throttling causes TCP socket receive delays. The server drops stale unread telemetry frames in the queue rather than pausing the motor loop with TCP backpressure.
+- The physical laser on the floor runs at 100% full speed regardless of whether browser tabs are focused, unfocused, minimized, or backgrounded.
+- The client-side canvas in `js/visual-square.js` triggers an immediate render upon state reception if `document.hidden` or `!document.hasFocus()`, keeping the display live even if the browser throttles `requestAnimationFrame`.
+
 ---
 
 ## 5. Repository File Structure

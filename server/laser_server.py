@@ -64,7 +64,7 @@ class LaserApplication:
         )
 
         self.driver = ServoDriver(self.config)
-        self.active_clients: Set[WebSocket] = set()
+        self.client_queues: Dict[WebSocket, asyncio.Queue] = {}
 
         # Active background pattern task
         self.current_pattern: Optional[str] = None
@@ -145,18 +145,44 @@ class LaserApplication:
             },
         }
 
+    @property
+    def active_clients(self) -> Set[WebSocket]:
+        return set(self.client_queues.keys())
+
+    def register_client(self, websocket: WebSocket) -> asyncio.Queue:
+        """Register a client with a non-blocking single-item queue."""
+        q: asyncio.Queue = asyncio.Queue(maxsize=1)
+        self.client_queues[websocket] = q
+        return q
+
+    def unregister_client(self, websocket: WebSocket):
+        """Unregister a client and remove its queue."""
+        self.client_queues.pop(websocket, None)
+
     async def broadcast_state(self):
-        """Send state to all connected WebSocket clients."""
-        if not self.active_clients:
+        """Non-blocking state dispatch to all connected WebSocket clients.
+
+        Using a single-item queue per client guarantees that:
+        1. Fast, focused clients receive real-time 60fps updates.
+        2. Throttled, unfocused, or background browser tabs drop intermediate frames
+           instead of exerting TCP backpressure on the server.
+        3. Physical motor loops and hardware timing are NEVER delayed or blocked
+           by any client's window focus, network latency, or tab throttling.
+        """
+        if not self.client_queues:
             return
+
         state_msg = json.dumps(self.get_state())
-        dead = set()
-        for ws in self.active_clients:
+        for ws, q in list(self.client_queues.items()):
+            if q.full():
+                try:
+                    q.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
             try:
-                await ws.send_text(state_msg)
-            except Exception:
-                dead.add(ws)
-        self.active_clients -= dead
+                q.put_nowait(state_msg)
+            except asyncio.QueueFull:
+                pass
 
     async def move(self, pan: float, tilt: float, smooth: bool = False, manual: bool = True):
         """Move to position with optional smooth interpolation."""
@@ -800,13 +826,26 @@ async def post_pattern_stop():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """Real-time bidirectional WebSocket handler."""
+    """Real-time bidirectional WebSocket handler with decoupled non-blocking writer."""
     await websocket.accept()
-    laser_app.active_clients.add(websocket)
-    logger.info("Client connected via WebSocket. Active: %d", len(laser_app.active_clients))
+    queue = laser_app.register_client(websocket)
+    logger.info("Client connected via WebSocket. Active: %d", len(laser_app.client_queues))
 
     # Send initial state immediately upon connection
     await websocket.send_text(json.dumps(laser_app.get_state()))
+
+    async def client_writer():
+        try:
+            while True:
+                msg = await queue.get()
+                await websocket.send_text(msg)
+                queue.task_done()
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.debug("Client writer disconnected: %s", e)
+
+    writer_task = asyncio.create_task(client_writer())
 
     try:
         while True:
@@ -892,8 +931,9 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error("WebSocket exception: %s", e)
     finally:
-        laser_app.active_clients.discard(websocket)
-        logger.info("Client disconnected. Active: %d", len(laser_app.active_clients))
+        writer_task.cancel()
+        laser_app.unregister_client(websocket)
+        logger.info("Client disconnected. Active: %d", len(laser_app.client_queues))
 
 
 # Mount web frontend root for direct access on port 8765
