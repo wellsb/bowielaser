@@ -69,8 +69,10 @@ class LaserApplication:
         # Active background pattern task
         self.current_pattern: Optional[str] = None
         self.pattern_task: Optional[asyncio.Task] = None
-        self.pattern_speed: float = 1.0
+        self.pattern_speed: float = 3.0
         self.pattern_dwell: float = 1.0
+        self.pattern_speed_rand: float = 0.0
+        self.pattern_dwell_rand: float = 0.0
 
         # Calibration mode allows stepping outside limits to test mechanical stops
         self.calibration_mode: bool = not self.calibration.get("calibrated", False)
@@ -135,6 +137,8 @@ class LaserApplication:
             "active_pattern": self.current_pattern,
             "pattern_speed": self.pattern_speed,
             "pattern_dwell": self.pattern_dwell,
+            "pattern_speed_rand": self.pattern_speed_rand,
+            "pattern_dwell_rand": self.pattern_dwell_rand,
             "channels": {
                 "pan": self.driver.pan_channel,
                 "tilt": self.driver.tilt_channel,
@@ -466,17 +470,46 @@ class LaserApplication:
 
     # --- Background Pattern Generators (Perimeter Trace, Cat Play) ---
 
-    async def start_pattern(self, pattern: str, speed: float = 1.0, dwell: float = 1.0):
+    def get_random_move_duration(self) -> float:
+        """Calculate movement duration in seconds with configurable randomness."""
+        base = self.pattern_speed
+        rand = self.pattern_speed_rand
+        if rand > 0.001:
+            dur = random.uniform(max(0.1, base - rand), base + rand)
+        else:
+            dur = base
+        return max(0.1, round(dur, 2))
+
+    def get_random_dwell_duration(self) -> float:
+        """Calculate dwell duration in seconds with configurable randomness."""
+        base = self.pattern_dwell
+        rand = self.pattern_dwell_rand
+        if rand > 0.001:
+            dur = random.uniform(max(0.0, base - rand), base + rand)
+        else:
+            dur = base
+        return max(0.0, round(dur, 2))
+
+    async def start_pattern(
+        self,
+        pattern: str,
+        speed: float = 3.0,
+        dwell: float = 1.0,
+        speed_rand: float = 0.0,
+        dwell_rand: float = 0.0,
+    ):
         """Start an automated pattern inside the safe calibration floor area."""
-        await self.stop_pattern()
+        await self.stop_pattern(broadcast=False)
         pat_norm = pattern.lower().strip()
         if pat_norm in ("smooth_random", "glide", "stalk", "smooth_stalk"):
             self.current_pattern = "smooth_random"
         else:
             self.current_pattern = pat_norm
 
-        self.pattern_speed = max(0.2, min(speed, 10.0))
-        self.pattern_dwell = max(0.1, min(dwell, 5.0))
+        self.pattern_speed = max(0.1, min(float(speed), 20.0))
+        self.pattern_dwell = max(0.0, min(float(dwell), 20.0))
+        self.pattern_speed_rand = max(0.0, min(float(speed_rand), 10.0))
+        self.pattern_dwell_rand = max(0.0, min(float(dwell_rand), 10.0))
 
         if self.current_pattern == "perimeter":
             self.pattern_task = asyncio.create_task(self._pattern_perimeter_loop())
@@ -489,7 +522,7 @@ class LaserApplication:
 
         await self.broadcast_state()
 
-    async def stop_pattern(self):
+    async def stop_pattern(self, broadcast: bool = True):
         """Halt running pattern task."""
         if self.pattern_task and not self.pattern_task.done():
             self.pattern_task.cancel()
@@ -499,7 +532,8 @@ class LaserApplication:
                 pass
         self.pattern_task = None
         self.current_pattern = None
-        await self.broadcast_state()
+        if broadcast:
+            await self.broadcast_state()
 
     async def _pattern_perimeter_loop(self):
         """Trace the 4 corners of the floor play area quadrilateral smoothly."""
@@ -515,14 +549,17 @@ class LaserApplication:
 
             while True:
                 for pt in seq:
-                    steps = max(2, int(30 / self.pattern_speed))
-                    interval = max(0.01, 0.02 / min(self.pattern_speed, 2.0))
+                    move_sec = self.get_random_move_duration()
+                    steps = max(3, int(move_sec / 0.02))
+                    interval = move_sec / steps
                     await self.driver.move_smooth(
                         pt["pan"], pt["tilt"], steps=steps, interval_sec=interval, clamp_limits=clamp
                     )
                     await self.broadcast_state()
                     # Pause at each corner
-                    await asyncio.sleep(self.pattern_dwell)
+                    dwell_sec = self.get_random_dwell_duration()
+                    if dwell_sec > 0:
+                        await asyncio.sleep(dwell_sec)
         except asyncio.CancelledError:
             pass
 
@@ -537,16 +574,19 @@ class LaserApplication:
                 v = random.uniform(0.08, 0.92)
                 target_p, target_t = self._interpolate_quad(u, v)
 
-                # Rapid dart or smooth glide depending on speed
-                steps = max(1, int(15 / self.pattern_speed))
-                interval = max(0.01, 0.015 / min(self.pattern_speed, 2.0))
+                # Duration calculated from base speed and configured randomness
+                move_sec = self.get_random_move_duration()
+                steps = max(2, int(move_sec / 0.02))
+                interval = move_sec / steps
                 await self.driver.move_smooth(
                     target_p, target_t, steps=steps, interval_sec=interval, clamp_limits=clamp
                 )
                 await self.broadcast_state()
 
                 # Dwell time for cat to react and stalk the dot
-                await asyncio.sleep(self.pattern_dwell * random.uniform(0.6, 1.4))
+                dwell_sec = self.get_random_dwell_duration()
+                if dwell_sec > 0:
+                    await asyncio.sleep(dwell_sec)
         except asyncio.CancelledError:
             pass
 
@@ -581,13 +621,12 @@ class LaserApplication:
                 ny = dp / dist
 
                 # Random arc curvature: gentle curve deflection of up to 10 degrees
-                # giving it the flowing organic feel of Smooth Wander
                 curvature = random.uniform(-0.25, 0.25) * min(dist, 25.0)
 
-                # Calculate number of smooth interpolation steps based on speed and distance
-                base_steps = int((dist * 1.5 + 20) / self.pattern_speed)
-                steps = max(3, min(base_steps, 80))
-                interval = max(0.01, 0.025 / min(self.pattern_speed, 2.0))
+                # Calculate smooth steps and interval based on randomized movement duration
+                move_sec = self.get_random_move_duration()
+                steps = max(5, int(move_sec / 0.02))
+                interval = move_sec / steps
 
                 for step_idx in range(1, steps + 1):
                     # Progress tau in [0.0, 1.0]
@@ -616,25 +655,28 @@ class LaserApplication:
                 await self.broadcast_state()
 
                 # Natural feline stalk & pounce dwell pause
-                dwell_time = self.pattern_dwell * random.uniform(0.6, 1.4)
+                dwell_sec = self.get_random_dwell_duration()
 
                 # Subtle micro-prey twitch during pause (makes cats stalk intently!)
-                if dwell_time > 0.6 and random.random() < 0.6:
-                    pause_part = dwell_time * 0.45
+                if dwell_sec > 0.6 and random.random() < 0.5:
+                    pause_part = dwell_sec * 0.45
                     await asyncio.sleep(pause_part)
 
-                    # Tiny jitter of ~0.4°
-                    jit_p = curr_p + random.uniform(-0.4, 0.4)
-                    jit_t = curr_t + random.uniform(-0.4, 0.4)
+                    # Tiny jitter of ~0.35°
+                    jit_p = curr_p + random.uniform(-0.35, 0.35)
+                    jit_t = curr_t + random.uniform(-0.35, 0.35)
                     self.driver.move(jit_p, jit_t, clamp_limits=clamp)
                     await self.broadcast_state()
-                    await asyncio.sleep(0.08)
+                    await asyncio.sleep(0.06)
 
                     self.driver.move(curr_p, curr_t, clamp_limits=clamp)
                     await self.broadcast_state()
-                    await asyncio.sleep(dwell_time - pause_part - 0.08)
+                    rem = max(0.0, dwell_sec - pause_part - 0.06)
+                    if rem > 0:
+                        await asyncio.sleep(rem)
                 else:
-                    await asyncio.sleep(dwell_time)
+                    if dwell_sec > 0:
+                        await asyncio.sleep(dwell_sec)
 
         except asyncio.CancelledError:
             pass
@@ -652,8 +694,9 @@ class LaserApplication:
                 self.driver.move(target_p, target_t, clamp_limits=clamp)
                 await self.broadcast_state()
 
-                time_val += 0.05 * self.pattern_speed
-                await asyncio.sleep(0.03)
+                move_sec = self.get_random_move_duration()
+                time_val += 0.05 / max(0.2, move_sec)
+                await asyncio.sleep(0.02)
         except asyncio.CancelledError:
             pass
 
@@ -740,9 +783,11 @@ async def post_record_limit(data: Dict):
 async def post_pattern_start(data: Dict):
     """Start pattern."""
     pattern = data.get("pattern", "perimeter")
-    speed = float(data.get("speed", 1.0))
+    speed = float(data.get("speed", 3.0))
     dwell = float(data.get("dwell", 1.0))
-    await laser_app.start_pattern(pattern, speed=speed, dwell=dwell)
+    speed_rand = float(data.get("speed_rand", 0.0))
+    dwell_rand = float(data.get("dwell_rand", 0.0))
+    await laser_app.start_pattern(pattern, speed=speed, dwell=dwell, speed_rand=speed_rand, dwell_rand=dwell_rand)
     return {"status": "ok", "pattern": pattern}
 
 
@@ -832,7 +877,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 pattern = msg.get("pattern", "perimeter")
                 speed = float(msg.get("speed", 1.0))
                 dwell = float(msg.get("dwell", 1.0))
-                await laser_app.start_pattern(pattern, speed, dwell)
+                speed_rand = float(msg.get("speed_rand", 0.0))
+                dwell_rand = float(msg.get("dwell_rand", 0.0))
+                await laser_app.start_pattern(pattern, speed, dwell, speed_rand, dwell_rand)
 
             elif msg_type == "stop_pattern":
                 await laser_app.stop_pattern()

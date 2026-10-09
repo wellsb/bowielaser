@@ -229,15 +229,27 @@
 
         <div class="play-slider-group">
           <div class="play-slider-row">
-            <span>Movement Speed:</span>
-            <input type="range" id="play-speed-slider" min="0.3" max="10.0" step="0.1" value="1.0" style="flex: 1; max-width: 200px;">
-            <span id="play-speed-val" style="font-family: monospace; font-weight: 600;">1.0x</span>
+            <span class="timing-label">Movement Speed:</span>
+            <input type="range" id="play-speed-slider" min="0.3" max="10.0" step="0.1" value="2.0" class="timing-slider">
+            <span id="play-speed-val" class="timing-val">2.0s</span>
+            <div class="randomness-control" title="Configurable Randomness (± seconds)">
+              <span class="rand-label">±</span>
+              <input type="number" id="play-speed-rand" class="spinner-input" min="0.0" max="10.0" step="0.1" value="0.0">
+              <span class="rand-unit">s</span>
+            </div>
+            <span id="play-speed-range" class="rand-range-hint">(2.0s)</span>
           </div>
 
           <div class="play-slider-row">
-            <span>Pounce Pause (Dwell):</span>
-            <input type="range" id="play-dwell-slider" min="0.2" max="3.0" step="0.1" value="1.0" style="flex: 1; max-width: 200px;">
-            <span id="play-dwell-val" style="font-family: monospace; font-weight: 600;">1.0s</span>
+            <span class="timing-label">Pounce Pause (Dwell):</span>
+            <input type="range" id="play-dwell-slider" min="0.0" max="10.0" step="0.1" value="1.0" class="timing-slider">
+            <span id="play-dwell-val" class="timing-val">1.0s</span>
+            <div class="randomness-control" title="Configurable Randomness (± seconds)">
+              <span class="rand-label">±</span>
+              <input type="number" id="play-dwell-rand" class="spinner-input" min="0.0" max="10.0" step="0.1" value="0.0">
+              <span class="rand-unit">s</span>
+            </div>
+            <span id="play-dwell-range" class="rand-range-hint">(1.0s)</span>
           </div>
         </div>
       </section>

@@ -669,7 +669,7 @@ input[type="range"]::-moz-range-thumb {
   transform: scale(0.97);
 }
 
-/* Sliders inside Play Card */
+/* Sliders & Randomness inside Play Card */
 .play-slider-group {
   display: flex;
   flex-direction: column;
@@ -681,9 +681,94 @@ input[type="range"]::-moz-range-thumb {
 .play-slider-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   font-size: 0.76rem;
+  background: var(--bg-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.play-slider-row .timing-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 135px;
+}
+
+.play-slider-row .timing-slider {
+  flex: 1;
+  min-width: 70px;
+  max-width: 160px;
+}
+
+.play-slider-row .timing-val {
+  font-family: monospace;
+  font-weight: 600;
+  min-width: 34px;
+  text-align: right;
+  color: var(--text-primary);
+}
+
+.randomness-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-card);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.rand-label {
+  font-weight: 700;
+  color: var(--accent-laser);
+  font-size: 0.8rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.spinner-input {
+  width: 48px;
+  padding: 2px 2px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+}
+
+.spinner-input:focus {
+  border-color: var(--accent-laser);
+  box-shadow: 0 0 4px var(--accent-laser-glow);
+}
+
+.spinner-input::-webkit-inner-spin-button,
+.spinner-input::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 18px;
+  cursor: pointer;
+}
+
+.rand-unit {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-family: monospace;
+  user-select: none;
+}
+
+.rand-range-hint {
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: var(--accent-safe);
+  font-weight: 600;
+  min-width: 84px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* Visual Canvas & Scope (Right Column) */

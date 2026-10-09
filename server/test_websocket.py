@@ -129,7 +129,30 @@ async def test_bowielaser_websocket():
         }))
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
 
-        # 12. E-Stop / Release Servos
+        # 12. Test start_pattern with speed_rand and dwell_rand
+        print("Testing start_pattern with speed_rand=2.0 and dwell_rand=1.5...")
+        await ws.send(json.dumps({
+            "type": "start_pattern",
+            "pattern": "random",
+            "speed": 4.0,
+            "dwell": 2.0,
+            "speed_rand": 2.0,
+            "dwell_rand": 1.5
+        }))
+        state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
+        assert state["active_pattern"] == "random"
+        assert abs(state["pattern_speed"] - 4.0) < 0.01
+        assert abs(state["pattern_dwell"] - 2.0) < 0.01
+        assert abs(state["pattern_speed_rand"] - 2.0) < 0.01
+        assert abs(state["pattern_dwell_rand"] - 1.5) < 0.01
+        print("[PASS] start_pattern correctly accepts speed_rand and dwell_rand.")
+
+        await ws.send(json.dumps({"type": "stop_pattern"}))
+        state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
+        assert state["active_pattern"] is None
+        print("[PASS] Pattern stopped.")
+
+        # 13. E-Stop / Release Servos
         await ws.send(json.dumps({"type": "release"}))
         state = json.loads(await asyncio.wait_for(ws.recv(), timeout=3.0))
         assert state['is_released'] is True
